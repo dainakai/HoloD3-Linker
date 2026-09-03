@@ -6,12 +6,10 @@
 
 `HoloD3 Linker` connects per-frame 3D particle measurements produced by
 [`dainakai/HoloD3`](https://github.com/dainakai/HoloD3) into temporal trajectories.
-It packages the fixed-lag `best_tiebreak_z0.10` linker used in the `260712`
-pipeline behind a single HoloD3-aware command.
-
-HoloD3 deliberately stops at independent per-frame measurements. This repository
-starts from HoloD3's stable `particles_3d.csv` output and adds temporal `track_id`
-values without rerunning detection, depth estimation, or diameter estimation.
+It reads HoloD3's `particles_3d.csv` output and assigns temporal `track_id`
+values using a fixed-lag motion model that combines XY continuity, particle
+size, and depth. Detection, depth estimation, and diameter estimation are not
+rerun.
 
 ## Quick start
 
@@ -64,9 +62,9 @@ uv run holod3-link /absolute/path/to/HoloD3/runs/experiment-01
 | Path | Contents |
 | --- | --- |
 | `tracks_with_diam_depth.csv` | All HoloD3 columns plus temporal `track_id`, `laptrack_id`, and linker coordinates |
-| `tracks_with_diameter.csv` | Compatibility copy with depth-model detail columns removed |
+| `tracks_with_diameter.csv` | The tracked rows with depth-model detail columns removed |
 | `tracks_summary.csv` | One row per trajectory with length and first/last frame |
-| `trajectory3d/path_XXXXXXXX.csv` | One compact CSV per trajectory, compatible with the `260712` downstream tools |
+| `trajectory3d/path_XXXXXXXX.csv` | One compact CSV per trajectory for downstream analysis |
 | `depth3d_link_diagnostics.json` | Detailed online-link and tracklet-stitch diagnostics |
 | `holod3_link_summary.json` | Source paths, unit conversion, parameters, counts, and output paths |
 
@@ -75,22 +73,23 @@ also left untouched unless `--overwrite` is explicitly supplied.
 
 ## HoloD3-aware unit conversion
 
-The `260712` linker works in pixel-equivalent coordinates. `holod3-link` reads
-`optics.pixel_pitch_um` from the HoloD3 `pipeline_summary.json` and converts:
+Trajectory association uses pixel-equivalent coordinates. `holod3-link` reads
+`optics.pixel_pitch_um` from HoloD3's `pipeline_summary.json` and converts:
 
 - `final_diameter_um` to the linker's `diameter_px`; and
 - `z_um` to pixel-equivalent `z_lap`.
 
-This reproduces the original `260712` conversion for its calibrated
-`10 µm/px` acquisition while allowing HoloD3 runs with other pixel pitches.
-Resolution order is:
+This keeps lateral positions, particle diameter, and depth on a consistent
+numerical scale. The pixel pitch is resolved in this order:
 
 1. explicit `--pixel-pitch-um`;
 2. HoloD3 `pipeline_summary.json`;
 3. inference from `x_um / seg_xc` and `y_um / seg_yc`; then
-4. the `260712` compatibility default of `10 µm/px`.
+4. a fallback value of `10 µm/px`.
 
-The selected source and value are recorded in `holod3_link_summary.json`.
+The selected source and value are recorded in `holod3_link_summary.json`. If a
+run does not contain enough metadata for automatic resolution and was not
+acquired at `10 µm/px`, pass the correct value with `--pixel-pitch-um`.
 
 ## Input contract
 
@@ -106,8 +105,8 @@ duplicate row IDs, empty inputs, and unsafe output paths fail before linking.
 
 ## Linker defaults
 
-The command uses the production settings from
-`260712/src/tracking/link_best_tiebreak_z010.py`:
+The following settings are applied automatically, so the HoloD3 output path is
+the only required argument:
 
 | Setting | Default |
 | --- | --- |
@@ -119,7 +118,8 @@ The command uses the production settings from
 | online gap retention | up to 12 frames |
 | robust history predictor | enabled |
 
-The old online behavior remains available as `--linking-mode legacy`.
+An alternative online association mode is available as
+`--linking-mode legacy`.
 
 Common overrides are first-class options:
 
@@ -168,15 +168,14 @@ print(result.summary()["counts"])
 
 This package performs temporal association only. It does not rerun HoloD3,
 smooth reconstructed Z trajectories, or evaluate against ground truth. The
-default motion and gating parameters were selected for the `260712` acquisition
-and should be validated before being used with substantially different frame
-rates, flow speeds, particle densities, or optical scales.
+default motion and gating parameters are a starting point for HoloD3 time-series
+data. Validate and tune them for substantially different frame rates, flow
+speeds, particle densities, or optical scales.
 
-The bundled implementation was regression-checked against the original
-`260712` entry point on a 30-frame HoloD3 result: all 8,624 detections received
-the same `track_id`, yielding 2,845 trajectories in both runs. See
-[the provenance note](docs/provenance.md) for the exact source hashes and test
-conditions.
+The end-to-end workflow was regression-tested on a 30-frame HoloD3 result with
+8,624 detections. It reproduced the validated reference assignment exactly,
+producing 2,845 trajectories with zero `track_id` mismatches. Detailed
+validation records are available in [docs/provenance.md](docs/provenance.md).
 
 ## Development
 
@@ -187,8 +186,6 @@ uv run ruff check .
 uv build
 ```
 
-See [docs/provenance.md](docs/provenance.md) for the source snapshot and the
-packaging changes made to isolate the linker from the larger `260712` pipeline.
 Contribution guidelines are in [CONTRIBUTING.md](CONTRIBUTING.md), and security
 reports should follow [SECURITY.md](SECURITY.md).
 
