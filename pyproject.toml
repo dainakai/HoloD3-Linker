@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "holod3-linker"
+version = "0.1.0"
+description = "Link HoloD3 particle detections into 3D trajectories"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "Dai Nakai" }]
+dependencies = [
+    "numpy>=2.4.4",
+    "pandas>=3.0.3",
+    "scipy>=1.16.0",
+    "tqdm>=4.67.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.0",
+    "ruff>=0.12.0",
+]
+
+[project.scripts]
+holod3-link = "holod3_linker.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/holod3_linker"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# This loop-local helper is retained verbatim from the validated 260712 linker.
+"src/holod3_linker/linker.py" = ["B023"]

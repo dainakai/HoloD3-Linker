@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Generated linker outputs
+best_tiebreak_z010/
+trajectory3d/
+tracks_with_diam_depth.csv
+tracks_with_diameter.csv
+tracks_summary.csv
+depth3d_link_diagnostics.json
+holod3_link_summary.json
