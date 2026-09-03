@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/dainakai/HoloD3-Linker/actions/workflows/ci.yml/badge.svg)](https://github.com/dainakai/HoloD3-Linker/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3120/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 `HoloD3 Linker` connects per-frame 3D particle measurements produced by
 [`dainakai/HoloD3`](https://github.com/dainakai/HoloD3) into temporal trajectories.
@@ -194,4 +194,6 @@ reports should follow [SECURITY.md](SECURITY.md).
 
 ## License
 
-HoloD3 Linker is released under the [MIT License](LICENSE.md).
+HoloD3 Linker's project-specific source code and documentation are released
+under the [MIT License](LICENSE). This license does not grant rights in
+third-party software, model weights, or research data.
