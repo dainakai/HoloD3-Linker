@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a reproducible problem in HoloD3 Linker
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve HoloD3 Linker. Do not upload private research data, credentials, or model weights.
+  - type: input
+    id: version
+    attributes:
+      label: HoloD3 Linker version or commit
+      placeholder: v0.1.0 or a commit SHA
+    validations:
+      required: true
+  - type: input
+    id: holod3-version
+    attributes:
+      label: HoloD3 version or commit
+      placeholder: Commit SHA used to produce particles_3d.csv
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and sanitized input metadata
+      description: Include the command, column names, row/frame counts, and pixel-pitch source. Remove private paths and data.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I reproduced this with the latest `main` branch.
+          required: true
+        - label: I removed private data and credentials from this report.
+          required: true

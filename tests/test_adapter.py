@@ -107,3 +107,14 @@ def test_missing_linker_column_is_reported(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="missing required"):
         prepare_holod3_input(csv_path)
+
+
+def test_non_finite_required_value_is_reported(tmp_path: Path) -> None:
+    csv_path = tmp_path / "particles_3d.csv"
+    write_particles(csv_path)
+    frame = pd.read_csv(csv_path)
+    frame.loc[0, "xc"] = np.inf
+    frame.to_csv(csv_path, index=False)
+
+    with pytest.raises(ValueError, match="non-finite.*xc"):
+        prepare_holod3_input(csv_path)

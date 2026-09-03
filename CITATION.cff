@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software in research, please cite it using this metadata."
+title: "HoloD3 Linker"
+type: software
+authors:
+  - family-names: "Nakai"
+    given-names: "Dai"
+repository-code: "https://github.com/dainakai/HoloD3-Linker"
+url: "https://github.com/dainakai/HoloD3-Linker"
+license: MIT
+version: 0.1.0
+date-released: 2026-09-03

@@ -2,16 +2,27 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - run: uv sync --extra dev
-      - run: uv run pytest
-      - run: uv run ruff check .
+          python-version: "3.12"
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen pytest
+      - run: uv run --frozen ruff check .
+      - run: uv build

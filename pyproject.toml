@@ -9,6 +9,16 @@ description = "Link HoloD3 particle detections into 3D trajectories"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "Dai Nakai" }]
+license = "MIT"
+keywords = ["holography", "particle-tracking", "trajectory-linking", "3d-tracking"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
 dependencies = [
     "numpy>=2.4.4",
     "pandas>=3.0.3",
@@ -24,6 +34,12 @@ dev = [
 
 [project.scripts]
 holod3-link = "holod3_linker.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/dainakai/HoloD3-Linker"
+Repository = "https://github.com/dainakai/HoloD3-Linker.git"
+Issues = "https://github.com/dainakai/HoloD3-Linker/issues"
+Changelog = "https://github.com/dainakai/HoloD3-Linker/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/holod3_linker"]

@@ -1,12 +1,11 @@
 # Linker provenance
 
 The association algorithm in `src/holod3_linker/linker.py` was extracted on
-2026-09-03 from the active local `260712` pipeline:
+2026-09-03 from the active `260712` pipeline source tree:
 
 ```text
-/media/dai-server/M2Disk2TB/repos/260712/
-  src/tracking/link_best_tiebreak_z010.py
-  src/tracking/laptrack/depth3d_online_link.py
+260712/src/tracking/link_best_tiebreak_z010.py
+260712/src/tracking/laptrack/depth3d_online_link.py
 ```
 
 The original `depth3d_online_link.py` SHA-256 was:
@@ -30,7 +29,8 @@ Packaging changes are intentionally narrow:
 - `adapter.py` reads HoloD3 metadata and performs acquisition-aware unit
   conversion before invoking the association algorithm.
 
-The HoloD3 output contract was checked against `dainakai/HoloD3` commit:
+The HoloD3 output contract was checked against
+[`dainakai/HoloD3`](https://github.com/dainakai/HoloD3) commit:
 
 ```text
 bdd7cf0d1ce57a86e7e9205b493ecd5fdc04bc50

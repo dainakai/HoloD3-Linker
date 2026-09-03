@@ -157,12 +157,12 @@ def _validate_linker_columns(frame: pd.DataFrame, source: Path) -> None:
     numeric_columns = ["frame", "conf", "xc", "yc", "w", "h", "slice", "diameter_px"]
     bad: dict[str, int] = {}
     for column in numeric_columns:
-        values = pd.to_numeric(frame[column], errors="coerce")
-        count = int(values.isna().sum())
+        values = pd.to_numeric(frame[column], errors="coerce").to_numpy(np.float64)
+        count = int(np.count_nonzero(~np.isfinite(values)))
         if count:
             bad[column] = count
     if bad:
-        raise ValueError(f"HoloD3 output has non-numeric required values: {bad}")
+        raise ValueError(f"HoloD3 output has non-finite required values: {bad}")
 
     frames = pd.to_numeric(frame["frame"], errors="raise").to_numpy(np.float64)
     if np.any(frames < 0) or np.any(frames != np.floor(frames)):
