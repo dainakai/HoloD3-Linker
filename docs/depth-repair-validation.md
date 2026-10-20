@@ -195,7 +195,10 @@ because Smoother re-estimates shared priors and noise over the changed set.
   boundary vetoes, unchanged observations, provenance, ID allocation,
   invalid inputs, and consistent CLI/summary/trajectory outputs.
 
-The default stays **off**. Use `audit` to review a new acquisition and `split`
-when this conservative discontinuity model fits it. Enabling it by default
-would require broader independently labeled acquisitions, especially real
-rapid/rotating motion, sustained depth-estimation biases, and short swaps.
+The CLI and Python runner default to **split**. Regression tests verify that
+an invocation without a mode applies a known cut through both entry points.
+Use `audit` to inspect proposals without applying them, or `off` to preserve
+the historical associations and CSV schema. The limitations above still
+apply; broader independently labeled acquisitions are needed to quantify
+performance on real rapid/rotating motion, sustained depth-estimation biases,
+and short swaps.

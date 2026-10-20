@@ -5,13 +5,14 @@ online association and tracklet stitching, before writing outputs**. It splits
 suspected bad connections without changing or removing any measurements.
 Smoother is neither called nor installed by Linker.
 
-The default remains `off`. `audit` writes proposals while preserving the
-original assignments. Use audit on a new acquisition before selecting split:
-a discontinuity is evidence of a possible identity change, not proof.
+The CLI and Python runner default to `split`, applying the proposed cuts.
+`audit` writes proposals while preserving the original assignments; `off`
+disables the check and retains the historical association behavior and CSV
+schema. A discontinuity is evidence of a possible identity change, not proof.
 
 ```bash
 uv run holod3-link /data/run --depth-repair audit --output-dir /data/audit
-uv run holod3-link /data/run --depth-repair split --output-dir /data/repaired
+uv run holod3-link /data/run --output-dir /data/repaired
 holod3-smooth /data/repaired
 ```
 
@@ -87,7 +88,7 @@ these scores.
 
 | Option | Default | Interpretation |
 | --- | --- | --- |
-| `--depth-repair` | `off` | `off`, `audit`, or `split` |
+| `--depth-repair` | `split` | `off`, `audit`, or `split` |
 | `--depth-repair-window` | 12 | Observations per side of the smaller fit |
 | `--depth-repair-min-segment` | 24 | Minimum retained length; at least twice the window |
 | `--depth-repair-z-score` | 8 | Jump/noise ratio, **not a statistical z-test** |
@@ -134,7 +135,7 @@ assignments and the CSV schema.
 ```python
 from holod3_linker import DepthRepairConfig, link_holod3_output, repair_depth_links
 
-linked = link_holod3_output("/data/run", depth_repair="split")
+linked = link_holod3_output("/data/run")  # depth_repair="split" by default
 
 # In-memory use on already linked observations; frame and z_lap are required.
 result = repair_depth_links(
@@ -169,5 +170,5 @@ Fast continuous displacement can be falsely split when it is unresolved by
 the local windows. Known volume bounds help with boundary artifacts but do
 not resolve ambiguity in the volume interior.
 
-See [validation and measured limitations](depth-repair-validation.md) before
-enabling split on a new acquisition.
+See [validation and measured limitations](depth-repair-validation.md) when
+assessing a new acquisition; `audit` records candidates without applying cuts.

@@ -6,9 +6,10 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
-- Add opt-in `--depth-repair audit|split` after tracklet stitching. Robust local
-  position-discontinuity checks preserve measurements, record cut evidence and
-  parent IDs, and protect short returning depth outliers.
+- Enable `--depth-repair split` by default after tracklet stitching in the CLI
+  and Python runner; `audit` records proposals and `off` disables repair. Robust
+  local position-discontinuity checks preserve measurements, record cut
+  evidence and parent IDs, and protect short returning depth outliers.
 - Add reproducible synthetic comparisons, experimental 260715 validation, and
   regression tests for continuous motion, gaps, units, provenance, and exports.
 

@@ -377,7 +377,10 @@ def add_depth_repair_arguments(parser: argparse.ArgumentParser, *, include_mode:
     group = parser.add_argument_group("persistent depth discontinuities")
     if include_mode:
         group.add_argument(
-            "--depth-repair", choices=MODES, default="off", help="Audit or split suspected false links after stitching."
+            "--depth-repair",
+            choices=MODES,
+            default="split",
+            help="Split suspected false links after stitching (default: split); audit records proposals, off disables.",
         )
     group.add_argument(
         "--depth-repair-window", type=int, default=12, help="Observations per side of the smaller local fit."

@@ -43,13 +43,14 @@ against the same 30-frame HoloD3 result on 2026-09-03. The result contained
 8,624 detections. All 8,624 `track_id` assignments matched exactly, both runs
 produced 2,845 trajectories, and there were zero mismatches.
 
-## Optional depth repair
+## Depth repair
 
-`depth_repair.py` adds a separate, opt-in association check after the extracted
+`depth_repair.py` adds a separate association check after the extracted
 online/stitching algorithm and before output. It is not part of the original
-source hash above. The default `off` path keeps the existing associations;
-`audit` records proposals without changing them; `split` only changes IDs and
-adds provenance. Measurements are preserved.
+source hash above. The default `split` mode changes IDs and adds provenance.
+`audit` records proposals without changing assignments; `off` keeps the
+historical associations and CSV schema. Measurements are preserved in every
+mode.
 
 The [algorithm](depth-repair.md) and
 [validation record](depth-repair-validation.md) document synthetic comparisons,

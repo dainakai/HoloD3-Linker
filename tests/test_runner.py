@@ -61,7 +61,8 @@ def test_link_holod3_output_end_to_end(tmp_path: Path) -> None:
     assert tracked["track_id"].nunique() == 3
     assert len(list(result.trajectory_dir.glob("path_*.csv"))) == 3
     assert not (result.output_dir / "_work").exists()
-    assert result.summary()["counts"] == {"rows": 18, "frames": 6, "tracks": 3}
+    assert result.summary()["counts"] == {"rows": 18, "frames": 6, "tracks": 3, "depth_cuts": 0}
+    assert result.summary()["linker"]["depth_repair"]["mode"] == "split"
 
 
 def test_dry_run_validates_without_writing(tmp_path: Path) -> None:
@@ -73,6 +74,7 @@ def test_dry_run_validates_without_writing(tmp_path: Path) -> None:
     assert isinstance(plan, dict)
     assert plan["source"]["rows"] == 18
     assert plan["parameters"]["linking_mode"] == "fixed-lag"
+    assert plan["parameters"]["depth_repair"] == "split"
     assert not (run_dir / "best_tiebreak_z010").exists()
 
 
@@ -201,6 +203,31 @@ def test_depth_repair_cli_and_plan_forward_bounds_and_units(tmp_path: Path) -> N
     assert plan["parameters"]["depth_repair_config"]["z_bounds"] == [0, 20000]
     assert "--depth-repair-z-bounds" in plan["command"]
     assert not (run_dir / "best_tiebreak_z010").exists()
+
+
+@pytest.mark.parametrize("entrypoint", ["api", "cli"])
+def test_depth_repair_splits_by_default(tmp_path: Path, entrypoint: str) -> None:
+    run_dir = tmp_path / "input"
+    output = tmp_path / "output"
+    write_depth_jump_run(run_dir)
+    if entrypoint == "api":
+        link_holod3_output(run_dir, output_dir=output)
+    else:
+        subprocess.run(
+            [sys.executable, "-m", "holod3_linker.cli", str(run_dir), "--output-dir", str(output)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    tracked = pd.read_csv(output / "tracks_with_diam_depth.csv")
+    assert tracked.groupby("track_id").frame.agg(["min", "max"]).values.tolist() == [[0, 79], [80, 159]]
+    assert tracked.linker_parent_track_id.nunique() == 1
+    cuts = pd.read_csv(output / "depth_link_cuts.csv")
+    assert cuts.frame_after.tolist() == [80]
+    assert cuts.applied.tolist() == [True]
+    summary = json.loads((output / "holod3_link_summary.json").read_text())
+    assert summary["parameters"]["depth_repair"] == "split"
+    assert summary["counts"]["depth_cuts"] == 1
 
 
 def test_invalid_depth_repair_mode_cannot_overwrite_output(tmp_path: Path) -> None:

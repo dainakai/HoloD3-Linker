@@ -144,7 +144,7 @@ def link_holod3_output(
     z_start_velocity_alpha: float = 0.20,
     start_frame: int | None = None,
     end_frame: int | None = None,
-    depth_repair: str = "off",
+    depth_repair: str = "split",
     depth_repair_config: DepthRepairConfig | None = None,
     linker_args: Sequence[str] = (),
     overwrite: bool = False,
