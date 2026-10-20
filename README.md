@@ -67,6 +67,7 @@ uv run holod3-link /absolute/path/to/HoloD3/runs/experiment-01
 | `trajectory3d/path_XXXXXXXX.csv` | One compact CSV per trajectory for downstream analysis |
 | `depth3d_link_diagnostics.json` | Detailed online-link and tracklet-stitch diagnostics |
 | `holod3_link_summary.json` | Source paths, unit conversion, parameters, counts, and output paths |
+| `depth_link_cuts.csv` | Optional depth-repair proposals, evidence, and whether applied |
 
 HoloD3's input `particles_3d.csv` is never modified. Existing linker output is
 also left untouched unless `--overwrite` is explicitly supplied.
@@ -148,6 +149,31 @@ creating files:
 ```bash
 uv run holod3-link /data/HoloD3/runs/experiment-01 --dry-run
 ```
+
+## Optional repair of persistent depth jumps
+
+Linker can check for suspected switches between particles at different depths
+before exporting trajectories:
+
+```bash
+uv run holod3-link /data/HoloD3/runs/experiment-01 \
+  --depth-repair audit --output-dir /data/tracking/audit
+
+uv run holod3-link /data/HoloD3/runs/experiment-01 \
+  --depth-repair split --output-dir /data/tracking/repaired
+```
+
+The check compares robust local motion on both sides of a candidate and requires
+a persistent position discontinuity. It protects short returning outlier bursts
+and compares against continuous curvature and velocity changes. `audit` records
+proposals; `split` assigns separate IDs and preserves `linker_parent_track_id`.
+Every observation is retained, and the output goes directly to HoloD3-Smoother.
+`depth_link_cuts.csv` and the diagnostics explain the accepted proposals.
+
+The default is `off`, preserving existing results. Long depth-estimator biases
+and unresolved rapid motion remain ambiguous. See the
+[algorithm and parameters](docs/depth-repair.md) and
+[experimental validation](docs/depth-repair-validation.md).
 
 ## Python API
 
