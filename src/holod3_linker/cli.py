@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from holod3_linker import __version__
+from holod3_linker.depth_repair import add_depth_repair_arguments, config_from_args
 from holod3_linker.runner import LinkResult, link_holod3_output
 
 
@@ -42,6 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--z-start-velocity-alpha", type=float, default=0.20)
     parser.add_argument("--start-frame", type=int, default=None)
     parser.add_argument("--end-frame", type=int, default=None)
+    add_depth_repair_arguments(parser)
     parser.add_argument(
         "--linker-arg",
         action="append",
@@ -74,6 +76,8 @@ def main(argv: list[str] | None = None) -> int:
             z_start_velocity_alpha=args.z_start_velocity_alpha,
             start_frame=args.start_frame,
             end_frame=args.end_frame,
+            depth_repair=args.depth_repair,
+            depth_repair_config=config_from_args(args),
             linker_args=args.linker_arg,
             overwrite=args.overwrite,
             keep_link_input=args.keep_link_input,

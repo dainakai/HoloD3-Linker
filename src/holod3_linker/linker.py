@@ -17,6 +17,7 @@ from scipy.optimize import linear_sum_assignment
 from tqdm import tqdm
 
 from holod3_linker.core import UnionFind, estimate_global_flow, l2_normalize, track_gate
+from holod3_linker.depth_repair import add_depth_repair_arguments, config_from_args, repair_depth_links
 from holod3_linker.outputs import write_track_outputs
 
 LINKING_MODE_PRESETS: dict[str, dict[str, bool | float | int]] = {
@@ -1164,7 +1165,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--large-stitch-size-log-max", type=float, default=0.85)
     p.add_argument("--large-stitch-vel-cost-max", type=float, default=1.35)
     p.add_argument("--max-merge-examples", type=int, default=50)
+    add_depth_repair_arguments(p)
     args = p.parse_args()
+    try:
+        config_from_args(args)
+    except ValueError as exc:
+        p.error(str(exc))
     preset = LINKING_MODE_PRESETS[args.linking_mode]
     for name, value in preset.items():
         if getattr(args, name) is None:
@@ -1197,6 +1203,8 @@ def main() -> None:
     if df.empty:
         raise RuntimeError("No detections left after filtering.")
     df = prepare_link_columns(df, args.xy_source, args.z_lap_scale)
+    if args.depth_repair != "off" and "linker_parent_track_id" in df:
+        raise ValueError("linker_parent_track_id is reserved for depth repair provenance")
     gate_size_source = args.gate_size_source or args.size_source
     if "obs_id" not in df.columns:
         df.insert(0, "obs_id", np.arange(len(df), dtype=np.int64))
@@ -1279,6 +1287,15 @@ def main() -> None:
         diameter_tiebreak_cap=args.diameter_tiebreak_cap,
         max_examples=args.max_merge_examples,
     )
+    repair_diag = {"mode": "off", "cut_count": 0}
+    if args.depth_repair != "off":
+        repair = repair_depth_links(df, stitched_ids, config=config_from_args(args))
+        repair_diag = {"mode": args.depth_repair, **repair.diagnostics}
+        repair.cuts["applied"] = args.depth_repair == "split"
+        repair.cuts.to_csv(out_dir / "depth_link_cuts.csv", index=False)
+        if args.depth_repair == "split":
+            df["linker_parent_track_id"] = stitched_ids
+            stitched_ids = repair.track_ids
     output_diag = write_track_outputs(df, stitched_ids, out_dir, args)
 
     diag = {
@@ -1316,6 +1333,7 @@ def main() -> None:
         "global_flow": flow_diag,
         "online": online_diag,
         "stitch": stitch_diag,
+        "depth_repair": repair_diag,
         "output": output_diag,
         "args": jsonable(vars(args)),
         "elapsed_sec": float(time.perf_counter() - t0),

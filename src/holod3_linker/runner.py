@@ -8,11 +8,12 @@ import subprocess
 import sys
 import time
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 from holod3_linker.adapter import PreparedInput, prepare_holod3_input
+from holod3_linker.depth_repair import MODES, DepthRepairConfig
 
 LINKER_SOURCE_SHA256 = "e2bbd0e3f0f214715a1edc523960392ab98c188fe3185afbf7fcd9e2128c2a8b"
 BLOCKED_LINKER_ARGUMENTS = {"--input", "--out-dir", "--linking-mode", "--overwrite"}
@@ -44,7 +45,7 @@ def _validate_linker_args(arguments: Sequence[str]) -> list[str]:
     for argument in arguments:
         value = str(argument)
         option = value.split("=", 1)[0]
-        if option in BLOCKED_LINKER_ARGUMENTS:
+        if option in BLOCKED_LINKER_ARGUMENTS or option.startswith("--depth-repair"):
             raise ValueError(f"{option} is controlled by holod3-link and cannot be forwarded")
         result.append(value)
     return result
@@ -66,6 +67,8 @@ def _linker_command(
     z_start_velocity_alpha: float,
     start_frame: int | None,
     end_frame: int | None,
+    depth_repair: str,
+    depth_repair_config: DepthRepairConfig,
     linker_args: Sequence[str],
 ) -> list[str]:
     command = [
@@ -101,6 +104,14 @@ def _linker_command(
         command.extend(["--start-frame", str(start_frame)])
     if end_frame is not None:
         command.extend(["--end-frame", str(end_frame)])
+    command.extend(["--depth-repair", depth_repair])
+    for name, value in asdict(depth_repair_config).items():
+        if value is not None:
+            command.append(f"--depth-repair-{name.replace('_', '-')}")
+            if isinstance(value, (tuple, list)):
+                command.extend(str(v) for v in value)
+            else:
+                command.append(str(value))
     command.extend(_validate_linker_args(linker_args))
     return command
 
@@ -133,13 +144,20 @@ def link_holod3_output(
     z_start_velocity_alpha: float = 0.20,
     start_frame: int | None = None,
     end_frame: int | None = None,
+    depth_repair: str = "split",
+    depth_repair_config: DepthRepairConfig | None = None,
     linker_args: Sequence[str] = (),
     overwrite: bool = False,
     keep_link_input: bool = False,
     dry_run: bool = False,
 ) -> LinkResult | dict[str, Any]:
     started = time.perf_counter()
+    if depth_repair not in MODES:
+        raise ValueError(f"depth_repair must be one of {MODES}")
+    repair_config = depth_repair_config or DepthRepairConfig()
     prepared = prepare_holod3_input(holod3_output, pixel_pitch_um=pixel_pitch_um)
+    if depth_repair != "off" and "linker_parent_track_id" in prepared.frame:
+        raise ValueError("linker_parent_track_id is reserved for depth repair provenance")
     destination = (
         Path(output_dir).expanduser().resolve()
         if output_dir is not None
@@ -164,6 +182,8 @@ def link_holod3_output(
         z_start_velocity_alpha=z_start_velocity_alpha,
         start_frame=start_frame,
         end_frame=end_frame,
+        depth_repair=depth_repair,
+        depth_repair_config=repair_config,
         linker_args=linker_args,
     )
     plan = {
@@ -183,6 +203,8 @@ def link_holod3_output(
             "z_start_velocity_alpha": z_start_velocity_alpha,
             "start_frame": start_frame,
             "end_frame": end_frame,
+            "depth_repair": depth_repair,
+            "depth_repair_config": asdict(repair_config),
             "linker_args": list(linker_args),
         },
         "command": command,
@@ -243,5 +265,9 @@ def link_holod3_output(
         "link_input_csv": str(link_input_csv) if keep_link_input else None,
         "elapsed_sec": time.perf_counter() - started,
     }
+    if depth_repair != "off":
+        summary["counts"]["depth_cuts"] = diagnostics["depth_repair"]["cut_count"]
+        summary["outputs"]["depth_link_cuts_csv"] = str(destination / "depth_link_cuts.csv")
+        summary["linker"]["depth_repair"] = diagnostics["depth_repair"]
     result.summary_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return result

@@ -67,6 +67,7 @@ uv run holod3-link /absolute/path/to/HoloD3/runs/experiment-01
 | `trajectory3d/path_XXXXXXXX.csv` | One compact CSV per trajectory for downstream analysis |
 | `depth3d_link_diagnostics.json` | Detailed online-link and tracklet-stitch diagnostics |
 | `holod3_link_summary.json` | Source paths, unit conversion, parameters, counts, and output paths |
+| `depth_link_cuts.csv` | Depth-repair proposals, evidence, and whether applied; omitted in `off` mode |
 
 HoloD3's input `particles_3d.csv` is never modified. Existing linker output is
 also left untouched unless `--overwrite` is explicitly supplied.
@@ -149,6 +150,32 @@ creating files:
 uv run holod3-link /data/HoloD3/runs/experiment-01 --dry-run
 ```
 
+## Repair of persistent depth jumps
+
+Linker checks for suspected switches between particles at different depths
+before exporting trajectories. The CLI and Python API enable `split` by default:
+
+```bash
+uv run holod3-link /data/HoloD3/runs/experiment-01 \
+  --output-dir /data/tracking/repaired
+
+uv run holod3-link /data/HoloD3/runs/experiment-01 \
+  --depth-repair audit --output-dir /data/tracking/audit
+```
+
+The check compares robust local motion on both sides of a candidate and requires
+a persistent position discontinuity. It protects short returning outlier bursts
+and compares against continuous curvature and velocity changes. `audit` records
+proposals; `split` assigns separate IDs and preserves `linker_parent_track_id`.
+Every observation is retained, and the output goes directly to HoloD3-Smoother.
+`depth_link_cuts.csv` and the diagnostics explain the accepted proposals.
+
+Use `--depth-repair off` (or `depth_repair="off"` in Python) to preserve the
+associations and CSV schema from before this feature. Long depth-estimator
+biases and unresolved rapid motion remain ambiguous. See the
+[algorithm and parameters](docs/depth-repair.md) and
+[experimental validation](docs/depth-repair-validation.md).
+
 ## Python API
 
 ```python
@@ -172,10 +199,12 @@ default motion and gating parameters are a starting point for HoloD3 time-series
 data. Validate and tune them for substantially different frame rates, flow
 speeds, particle densities, or optical scales.
 
-The end-to-end workflow was regression-tested on a 30-frame HoloD3 result with
-8,624 detections. It reproduced the validated reference assignment exactly,
-producing 2,845 trajectories with zero `track_id` mismatches. Detailed
-validation records are available in [docs/provenance.md](docs/provenance.md).
+Before depth repair was added, the end-to-end workflow was regression-tested
+on a 30-frame HoloD3 result with 8,624 detections. It reproduced the validated reference assignment exactly,
+producing 2,845 trajectories with zero `track_id` mismatches. The current
+default additionally applies depth repair; use `--depth-repair off` to retain
+the original association behavior. Detailed validation records are available
+in [docs/provenance.md](docs/provenance.md).
 
 ## Development
 

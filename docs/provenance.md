@@ -42,3 +42,18 @@ The packaged linker and the original `260712` entry point were run independently
 against the same 30-frame HoloD3 result on 2026-09-03. The result contained
 8,624 detections. All 8,624 `track_id` assignments matched exactly, both runs
 produced 2,845 trajectories, and there were zero mismatches.
+
+## Depth repair
+
+`depth_repair.py` adds a separate association check after the extracted
+online/stitching algorithm and before output. It is not part of the original
+source hash above. The default `split` mode changes IDs and adds provenance.
+`audit` records proposals without changing assignments; `off` keeps the
+historical associations and CSV schema. Measurements are preserved in every
+mode.
+
+The [algorithm](depth-repair.md) and
+[validation record](depth-repair-validation.md) document synthetic comparisons,
+the unsmoothed 260715 acquisition, an end-to-end off/audit/split comparison,
+and known failure cases. The output diagnostics identify the new algorithm
+version and configuration independently of the upstream source hash.
