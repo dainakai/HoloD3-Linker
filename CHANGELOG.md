@@ -4,7 +4,7 @@ All notable changes to HoloD3 Linker are documented in this file.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## [0.2.0] - 2026-10-21
 
 - Enable `--depth-repair split` by default after tracklet stitching in the CLI
   and Python runner; `audit` records proposals and `off` disables repair. Robust
@@ -24,4 +24,5 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Synthetic end-to-end tests and exact regression comparison against the
   original `260712` entry point.
 
+[0.2.0]: https://github.com/dainakai/HoloD3-Linker/releases/tag/v0.2.0
 [0.1.0]: https://github.com/dainakai/HoloD3-Linker/releases/tag/v0.1.0

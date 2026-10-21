@@ -14,4 +14,4 @@ __all__ = [
     "repair_depth_links",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
